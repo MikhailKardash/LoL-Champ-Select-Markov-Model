@@ -24,14 +24,14 @@ def run_alg(team_a_list, team_b_list, data, champ_inds):
     losspace = create_constrained_space(flipinds(data),
                                         team_a_list,
                                         team_b_list)
-    print(len(winspace))
-    print(len(losspace))
+    #  print(len(winspace))
+    #  print(len(losspace))
     champs = generate_champ_list(team_a_list, team_b_list,
                                  champ_inds)
     prob = create_champ_probability(winspace, losspace,
                                     num, champs,  champ_inds, flag)
     final_prob = create_final_prob(prob)
-    return alternate_amax(final_prob)
+    return alternate_amax(np.asarray(final_prob))
 
 
 def flipinds(space):
@@ -71,29 +71,8 @@ def get_amax(probs, top_n):
 
 
 def alternate_amax(probs):
-    temp = np.asarray(probs)
-    p_vec = np.unique(temp[:, 1])
-    p_vec = np.flip(np.sort(p_vec))
-    inds_final = []
-    for el in p_vec:
-        # find inds of probs.
-        inds = np.argwhere(temp[:, 1] == el)
-        inds = np.squeeze(inds)
-        inds = inds.tolist()
-        # isolate probs we're interested in
-        temp2 = temp[inds, :]
-        if isinstance(inds, int):
-            inds_final = [*inds_final, inds]
-        else:
-            temp2 = np.reshape(temp2, [len(inds), temp2.shape[-1]])
-            # sort new data by win number
-            inds_final = np.argsort(temp2[:, 2])
-            # get in decreasing order
-            inds_final = np.flip(inds_final).tolist()
-            inds = np.asarray(inds)
-            inds_final = [*inds_final, *inds[inds_final]]
-    out = temp[inds_final]
-    return [out[:, 0], out[:, 1], out[:, 2]]
+    inds = np.lexsort((probs[:, 2], probs[:, 1]))
+    return probs[inds,:]
         
 
 def get_winloss(winspace, lossspace, champ_list, flag):
@@ -126,7 +105,7 @@ def marginalize(probs):
 
 
 def is_a_picking(numb, flag):
-    if (numb is 1) or (numb is 4) or (numb is 5) or (numb is 8) or (numb is 9):
+    if (numb == 1) or (numb == 4) or (numb == 5) or (numb == 8) or (numb == 9):
         return not flag
     else:
         return flag
@@ -148,10 +127,10 @@ def create_final_prob(inmat):
 def create_champ_probability(winspace, lossspace,
                              num, champ_list,
                              champ_inds, flag):
-    if num is 10:
+    if num == 10:
         return get_winloss(winspace, lossspace,
                            champ_list, flag)
-    elif num is 11:
+    elif num == 11:
         return 0
     else:
         out = []
@@ -160,7 +139,7 @@ def create_champ_probability(winspace, lossspace,
                 new_a = [champ]
                 newwin = create_constrained_space(winspace, new_a, [])
                 newloss = create_constrained_space(lossspace, new_a, [])
-                if len(newwin) is 0 and len(newloss) is 0:
+                if len(newwin) == 0 and len(newloss) == 0:
                     out.append([champ, 0, 0])
                 else:
                     newchamps = generate_champ_list(new_a, [], champ_list)
@@ -173,7 +152,7 @@ def create_champ_probability(winspace, lossspace,
                 new_b = [champ]
                 newwin = create_constrained_space(winspace, [], new_b)
                 newloss = create_constrained_space(lossspace, [], new_b)
-                if len(newwin) is 0 and len(newloss) is 0:
+                if len(newwin) == 0 and len(newloss) == 0:
                     out.append([champ, 0, 0])
                 else:    
                     newchamps = generate_champ_list([], new_b, champ_list)
